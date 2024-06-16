@@ -10,6 +10,10 @@
         .category-list {
             margin-bottom: 20px;
         }
+        .category-item.active {
+            background-color: #007bff;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -57,7 +61,6 @@
 <script>
     $(document).ready(function() {
         loadCategories();
-        loadProducts();
 
         // Load categories
         function loadCategories() {
@@ -67,6 +70,7 @@
                 $.each(data, function(key, category) {
                     categoryList.append('<li class="list-group-item category-item" data-id="' + category.id + '">' + category.name + ' (' + category.product_count + ')</li>');
                 });
+                loadParamsFromURL();
             });
         }
 
@@ -83,6 +87,8 @@
 
         // Handle category click
         $(document).on("click", ".category-item", function() {
+            $(".category-item").removeClass("active");
+            $(this).addClass("active");
             var category_id = $(this).data("id");
             var order_by = $("#sort-order").val();
             loadProducts(category_id, order_by);
@@ -91,7 +97,7 @@
 
         // Handle sort order change
         $("#sort-order").change(function() {
-            var category_id = $(".category-item.active").data("id");
+            var category_id = $(".category-item.active").data("id") || null;
             var order_by = $(this).val();
             loadProducts(category_id, order_by);
             updateURL(category_id, order_by);
@@ -117,16 +123,35 @@
 
         // Load parameters from URL
         function loadParamsFromURL() {
-            var url = new URL(window.location.href);
-            var category_id = url.searchParams.get('category');
-            var order_by = url.searchParams.get('order') || 'date';
+            var url = window.location.href.replace(window.location.origin + window.location.pathname, '');
+            var params = url.split('/');
+            var category_id = null;
+            var order_by = 'date';
+
+            params.forEach(function(param) {
+                if (param.startsWith('category=')) {
+                    category_id = param.split('=')[1];
+                }
+                if (param.startsWith('order=')) {
+                    order_by = param.split('=')[1];
+                }
+            });
+
+            $("#sort-order").val(order_by);
             if (category_id) {
+                $('[data-id="' + category_id + '"]').addClass('active');
                 loadProducts(category_id, order_by);
-                $("#sort-order").val(order_by);
+            } else {
+                loadProducts(null, order_by);
             }
         }
 
-        loadParamsFromURL();
+        // Handle browser back and forward buttons
+        window.onpopstate = function(event) {
+            if (event.state) {
+                loadProducts(event.state.category_id, event.state.order_by);
+            }
+        };
     });
 </script>
 </body>
