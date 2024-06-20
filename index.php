@@ -123,28 +123,18 @@
 
         // Load parameters from URL
         function loadParamsFromURL() {
-            var url = window.location.href.replace(window.location.origin + window.location.pathname, '');
-            var params = url.split('/');
-            var category_id = null;
-            var order_by = 'date';
+        var urlParams = new URLSearchParams(window.location.search);
+        var category_id = urlParams.get('category');
+        var order_by = urlParams.get('order') || 'date';
 
-            params.forEach(function(param) {
-                if (param.startsWith('category=')) {
-                    category_id = param.split('=')[1];
-                }
-                if (param.startsWith('order=')) {
-                    order_by = param.split('=')[1];
-                }
-            });
-
-            $("#sort-order").val(order_by);
-            if (category_id) {
-                $('[data-id="' + category_id + '"]').addClass('active');
-                loadProducts(category_id, order_by);
-            } else {
-                loadProducts(null, order_by);
-            }
+        $("#sort-order").val(order_by);
+        if (category_id) {
+            $('[data-id="' + category_id + '"]').addClass('active');
+            loadProducts(category_id, order_by);
+        } else {
+            loadProducts(null, order_by);
         }
+    }
 
         // Handle browser back and forward buttons
         window.onpopstate = function(event) {
